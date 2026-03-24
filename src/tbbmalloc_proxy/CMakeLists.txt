@@ -16,7 +16,7 @@ if (NOT BUILD_SHARED_LIBS)
     return()
 endif()
 
-add_library(tbbmalloc_proxy 
+add_library(tbbmalloc_proxy
     function_replacement.cpp
     proxy.cpp)
 
@@ -54,10 +54,6 @@ target_compile_options(tbbmalloc_proxy
     ${TBB_COMMON_COMPILE_FLAGS}
 )
 
-set_target_properties(tbbmalloc_proxy PROPERTIES
-    VERSION ${TBBMALLOC_BINARY_VERSION}.${TBB_BINARY_MINOR_VERSION}
-    SOVERSION ${TBBMALLOC_BINARY_VERSION})
-
 if (UNIX AND NOT APPLE)
     # Avoid use of target_link_libraries here as it changes /DEF option to \DEF on Windows.
     set_target_properties(tbbmalloc_proxy PROPERTIES
@@ -91,7 +87,7 @@ target_link_libraries(tbbmalloc_proxy
 )
 
 if(TBB_BUILD_APPLE_FRAMEWORKS)
-    set_target_properties(tbbmalloc_proxy PROPERTIES 
+    set_target_properties(tbbmalloc_proxy PROPERTIES
         FRAMEWORK TRUE
         FRAMEWORK_VERSION ${TBBMALLOC_BINARY_VERSION}.${TBB_BINARY_MINOR_VERSION}
         XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER com.intel.tbbmalloc-proxy
