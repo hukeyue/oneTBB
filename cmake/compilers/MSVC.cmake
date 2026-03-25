@@ -89,7 +89,7 @@ if (TBB_CONTROL_FLOW_GUARD)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "(Clang|IntelLLVM)")
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86|AMD64|i.86)")
+    if (OS_X64 OR OS_X86)
         set(TBB_COMMON_COMPILE_FLAGS ${TBB_COMMON_COMPILE_FLAGS} -mrtm -mwaitpkg)
     endif()
     set(TBB_IPO_COMPILE_FLAGS $<$<NOT:$<CONFIG:Debug>>:-flto>)

@@ -64,7 +64,7 @@ if (NOT TBB_STRICT AND COMMAND tbb_remove_compile_flag)
 endif()
 
 # Enable Intel(R) Transactional Synchronization Extensions (-mrtm) and WAITPKG instructions support (-mwaitpkg) on relevant processors
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(AMD64|amd64|i.86|x86)" AND NOT EMSCRIPTEN)
+if ((OS_X64 OR OS_X86) AND NOT EMSCRIPTEN)
     set(TBB_COMMON_COMPILE_FLAGS ${TBB_COMMON_COMPILE_FLAGS} -mrtm $<$<NOT:$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},12.0>>:-mwaitpkg>)
 endif()
 
@@ -77,7 +77,7 @@ set(TBB_COMMON_COMPILE_FLAGS ${TBB_COMMON_COMPILE_FLAGS}
     $<$<NOT:$<PLATFORM_ID:Windows>>:-fPIC>
     $<$<NOT:$<PLATFORM_ID:Emscripten>>:-fstack-protector-strong>)
 
-if (NOT APPLE AND NOT ANDROID_PLATFORM AND CMAKE_SYSTEM_PROCESSOR MATCHES "(AMD64|amd64|i.86|x86)" AND NOT WIN32)
+if (NOT APPLE AND NOT ANDROID_PLATFORM AND (OS_X86 OR OS_X64) AND NOT WIN32)
     set(TBB_LIB_COMPILE_FLAGS ${TBB_LIB_COMPILE_FLAGS} -fstack-clash-protection)
     if (NOT EMSCRIPTEN)
         # Some versions of Clang implicitly set -march=i686 when compiling for x86 and some don't.
@@ -95,6 +95,15 @@ if (NOT APPLE AND NOT ANDROID_PLATFORM AND CMAKE_SYSTEM_PROCESSOR MATCHES "(AMD6
             message(WARNING "Compiler does not support -fcf-protection=full.")
         endif()
     endif()
+endif()
+
+if (MINGW AND OS_X86)
+    list (APPEND TBB_COMMON_COMPILE_FLAGS -msse2)
+endif ()
+
+if (MINGW)
+    list (APPEND TBB_COMMON_COMPILE_FLAGS -fno-emulated-tls)
+    set(TBB_LIB_LINK_FLAGS ${TBB_LIB_LINK_FLAGS} -Wl,-plugin-opt=-emulated-tls=0)
 endif()
 
 # -z switch is not supported on MacOS and Windows
