@@ -356,7 +356,7 @@
 #endif
 
 #if _MSC_VER
-    #if !__TBB_NO_IMPLICIT_LINKAGE
+    #if !__TBB_NO_IMPLICIT_LINKAGE && __TBB_BUILD
         #ifdef _DEBUG
             #pragma comment(lib, "tbb12_debug.lib")
         #else
