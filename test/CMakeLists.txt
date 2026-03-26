@@ -80,8 +80,8 @@ function(tbb_add_test)
     target_compile_definitions(${_tbb_test_TARGET_NAME} PRIVATE
         $<$<CONFIG:DEBUG>:TBB_USE_DEBUG>
         $<$<BOOL:${TBB_CPF}>:__TBB_CPF_BUILD=1>
-        $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__TBB_DYNAMIC_LOAD_ENABLED=0>
-        $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__TBB_SOURCE_DIRECTLY_INCLUDED=1>
+        $<$<NOT:$<BOOL:${TBB_BUILD_SHARED_LIBS}>>:__TBB_DYNAMIC_LOAD_ENABLED=0>
+        $<$<NOT:$<BOOL:${TBB_BUILD_SHARED_LIBS}>>:__TBB_SOURCE_DIRECTLY_INCLUDED=1>
         $<$<BOOL:${TBB_TCM_TESTING}>:__TBB_TCM_TESTING_ENABLED=1>)
 
     target_link_libraries(${_tbb_test_TARGET_NAME} PRIVATE ${_tbb_test_DEPENDENCIES} Threads::Threads ${TBB_COMMON_LINK_LIBS})
@@ -132,7 +132,11 @@ function(tbb_add_lib_test)
     set(multiValueArgs DEPENDENCIES)
     cmake_parse_arguments(_tbb_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    add_library(_${_tbb_test_NAME} ${_tbb_test_SUBDIR}/${_tbb_test_NAME}.cpp)
+    if (TBB_BUILD_SHARED_LIBS)
+    add_library(_${_tbb_test_NAME} SHARED ${_tbb_test_SUBDIR}/${_tbb_test_NAME}.cpp)
+    else()
+    add_library(_${_tbb_test_NAME} STATIC ${_tbb_test_SUBDIR}/${_tbb_test_NAME}.cpp)
+    endif()
 
     target_include_directories(_${_tbb_test_NAME}
         PUBLIC
@@ -164,8 +168,8 @@ function(tbb_add_lib_test)
     target_compile_definitions(_${_tbb_test_NAME} PRIVATE
         $<$<CONFIG:DEBUG>:TBB_USE_DEBUG>
         $<$<BOOL:${TBB_CPF}>:__TBB_CPF_BUILD=1>
-        $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__TBB_DYNAMIC_LOAD_ENABLED=0>
-        $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__TBB_SOURCE_DIRECTLY_INCLUDED=1>)
+        $<$<NOT:$<BOOL:${TBB_BUILD_SHARED_LIBS}>>:__TBB_DYNAMIC_LOAD_ENABLED=0>
+        $<$<NOT:$<BOOL:${TBB_BUILD_SHARED_LIBS}>>:__TBB_SOURCE_DIRECTLY_INCLUDED=1>)
 
 
     # Prefer using target_link_options instead of target_link_libraries to specify link options because
@@ -286,7 +290,7 @@ function(tbb_add_tbbbind_test)
     endif()
 
     # Disable all HWLOC dependent tests in case of unsupported environment.
-    if (TBB_WINDOWS_DRIVER OR ANDROID_PLATFORM OR APPLE OR NOT BUILD_SHARED_LIBS)
+    if (TBB_WINDOWS_DRIVER OR ANDROID_PLATFORM OR APPLE OR NOT TBB_BUILD_SHARED_LIBS)
         return()
     endif()
     ProcessorCount(SYSTEM_CONCURRENCY)
@@ -647,7 +651,7 @@ if (TARGET TBB::tbb)
         tbb_add_tbbbind_test(SUBDIR conformance NAME conformance_arena_constraints)
     endif()
 
-    if (MSVC AND BUILD_SHARED_LIBS AND CMAKE_VERSION VERSION_GREATER 3.13) # LINK_OPTIONS property first appeared in 3.13
+    if (MSVC AND TBB_BUILD_SHARED_LIBS AND CMAKE_VERSION VERSION_GREATER 3.13) # LINK_OPTIONS property first appeared in 3.13
                                                     # version of the CMake
         tbb_add_test(SUBDIR tbb NAME test_implicit_linkage_on_windows)
         # TODO: consider setting environment instead of passing additional
@@ -738,7 +742,7 @@ if (TARGET TBB::tbbmalloc)
         endif()
 
         # Thread Sanitizer overloads memory management routines that conflicts with tbbmalloc_proxy.
-        if (BUILD_SHARED_LIBS AND NOT TBB_SANITIZE MATCHES "thread" AND TBBMALLOC_PROXY_BUILD AND NOT MSVC_CXX_ARCHITECTURE_ID MATCHES "ARM64")
+        if (TBB_BUILD_SHARED_LIBS AND NOT TBB_SANITIZE MATCHES "thread" AND TBBMALLOC_PROXY_BUILD AND NOT MSVC_CXX_ARCHITECTURE_ID MATCHES "ARM64")
             # Define TBB malloc proxy tests
             tbb_add_lib_test(SUBDIR tbbmalloc NAME test_malloc_atexit DEPENDENCIES TBB::tbbmalloc_proxy TBB::tbbmalloc)
 	    if (NOT TBB_EMSCRIPTEN)
