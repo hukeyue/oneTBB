@@ -12,13 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_library(tbbmalloc
+if (TBB_BUILD_SHARED_LIBS)
+add_library(tbbmalloc SHARED
     backend.cpp
     backref.cpp
     frontend.cpp
     large_objects.cpp
     tbbmalloc.cpp
     ../tbb/itt_notify.cpp)
+else()
+add_library(tbbmalloc STATIC
+    backend.cpp
+    backref.cpp
+    frontend.cpp
+    large_objects.cpp
+    tbbmalloc.cpp
+    ../tbb/itt_notify.cpp)
+endif()
 
 if (WIN32)
     target_sources(tbbmalloc PRIVATE tbbmalloc.rc)
@@ -31,8 +41,8 @@ target_compile_definitions(tbbmalloc
                            $<$<CONFIG:DEBUG>:TBB_USE_DEBUG>
                            PRIVATE
                            __TBBMALLOC_BUILD
-                           $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__TBB_DYNAMIC_LOAD_ENABLED=0>
-                           $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__TBB_SOURCE_DIRECTLY_INCLUDED=1>)
+                           $<$<NOT:$<BOOL:${TBB_BUILD_SHARED_LIBS}>>:__TBB_DYNAMIC_LOAD_ENABLED=0>
+                           $<$<NOT:$<BOOL:${TBB_BUILD_SHARED_LIBS}>>:__TBB_SOURCE_DIRECTLY_INCLUDED=1>)
 
 if (NOT ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(armv7-a|aarch64|mips|arm64|riscv)" OR
          "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm64" OR

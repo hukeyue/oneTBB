@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_library(tbb
+if (TBB_BUILD_SHARED_LIBS)
+add_library(tbb SHARED
     address_waiter.cpp
     allocator.cpp
     arena.cpp
@@ -45,6 +46,41 @@ add_library(tbb
     threading_control.cpp
     version.cpp
     queuing_rw_mutex.cpp)
+else()
+add_library(tbb STATIC
+    address_waiter.cpp
+    allocator.cpp
+    arena.cpp
+    arena_slot.cpp
+    concurrent_bounded_queue.cpp
+    dynamic_link.cpp
+    exception.cpp
+    governor.cpp
+    global_control.cpp
+    itt_notify.cpp
+    main.cpp
+    market.cpp
+    tcm_adaptor.cpp
+    misc.cpp
+    misc_ex.cpp
+    observer_proxy.cpp
+    parallel_pipeline.cpp
+    private_server.cpp
+    profiling.cpp
+    rml_tbb.cpp
+    rtm_mutex.cpp
+    rtm_rw_mutex.cpp
+    semaphore.cpp
+    small_object_pool.cpp
+    task.cpp
+    task_dispatcher.cpp
+    task_group_context.cpp
+    thread_dispatcher.cpp
+    thread_request_serializer.cpp
+    threading_control.cpp
+    version.cpp
+    queuing_rw_mutex.cpp)
+endif()
 
 add_library(TBB::tbb ALIAS tbb)
 
@@ -62,8 +98,8 @@ target_compile_definitions(
     PRIVATE
     __TBB_BUILD
     ${TBB_RESUMABLE_TASKS_USE_THREADS}
-    $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__TBB_DYNAMIC_LOAD_ENABLED=0>
-    $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__TBB_SOURCE_DIRECTLY_INCLUDED=1>
+    $<$<NOT:$<BOOL:${TBB_BUILD_SHARED_LIBS}>>:__TBB_DYNAMIC_LOAD_ENABLED=0>
+    $<$<NOT:$<BOOL:${TBB_BUILD_SHARED_LIBS}>>:__TBB_SOURCE_DIRECTLY_INCLUDED=1>
     $<$<NOT:$<BOOL:${TBB_VERIFY_DEPENDENCY_SIGNATURE}>>:__TBB_SKIP_DEPENDENCY_SIGNATURE_VERIFICATION=1>
 )
 
