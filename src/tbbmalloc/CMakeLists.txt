@@ -13,13 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_library(tbbmalloc
+if (TBB_BUILD_SHARED_LIBS)
+add_library(tbbmalloc SHARED
     backend.cpp
     backref.cpp
     frontend.cpp
     large_objects.cpp
     tbbmalloc.cpp
     ../tbb/itt_notify.cpp)
+else()
+add_library(tbbmalloc STATIC
+    backend.cpp
+    backref.cpp
+    frontend.cpp
+    large_objects.cpp
+    tbbmalloc.cpp
+    ../tbb/itt_notify.cpp)
+endif()
 
 if (WIN32)
     target_sources(tbbmalloc PRIVATE tbbmalloc.rc)
@@ -34,8 +44,8 @@ target_compile_definitions(tbbmalloc
     # Disable implicit assertions in C++ headers to avoid dependency on libstdc++
     $<$<CONFIG:DEBUG>:_GLIBCXX_NO_ASSERTIONS>
     __TBBMALLOC_BUILD
-    $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__TBB_DYNAMIC_LOAD_ENABLED=0>
-    $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:__TBB_SOURCE_DIRECTLY_INCLUDED=1>)
+    $<$<NOT:$<BOOL:${TBB_BUILD_SHARED_LIBS}>>:__TBB_DYNAMIC_LOAD_ENABLED=0>
+    $<$<NOT:$<BOOL:${TBB_BUILD_SHARED_LIBS}>>:__TBB_SOURCE_DIRECTLY_INCLUDED=1>)
 
 if (NOT (OS_ARM OR OS_AARCH64 OR OS_MIPS OR OS_MIPS64 OR OS_RISCV32 OR OS_RISCV64 OR
          WINDOWS_STORE OR

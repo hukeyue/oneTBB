@@ -149,11 +149,8 @@ if (WIN32)
         "Verify signature of a dependency during its dynamic linking at run-time on Windows*" OFF)
 endif()
 
-if (NOT DEFINED BUILD_SHARED_LIBS)
-    set(BUILD_SHARED_LIBS ON)
-endif()
-
-if (NOT BUILD_SHARED_LIBS)
+option(TBB_BUILD_SHARED_LIBS "Build TBB as shared library" ON)
+if (NOT TBB_BUILD_SHARED_LIBS)
     if(NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE)
         set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     endif()
@@ -249,7 +246,7 @@ endif()
 # - Enabling LTO on Android causes the NDK bug.
 #   NDK throws the warning: "argument unused during compilation: '-Wa,--noexecstack'"
 # - For some reason GCC does not instrument code with Thread Sanitizer when lto is enabled and C linker is used.
-if (TBB_ENABLE_IPO AND BUILD_SHARED_LIBS AND NOT ANDROID_PLATFORM AND NOT TBB_SANITIZE MATCHES "thread")
+if (TBB_ENABLE_IPO AND TBB_BUILD_SHARED_LIBS AND NOT ANDROID_PLATFORM AND NOT TBB_SANITIZE MATCHES "thread")
     # For older cmake versions without CheckIPOSupported and when ipo detection is broken,
     # try to enable IPO unconditionally.
     if (CMAKE_VERSION VERSION_LESS 3.9 OR TBB_IPO_DETECTION_BROKEN)
@@ -282,7 +279,7 @@ else()
             add_subdirectory(src/tbbmalloc_proxy)
         endif()
     endif()
-    if (NOT BUILD_SHARED_LIBS)
+    if (NOT TBB_BUILD_SHARED_LIBS)
         message(STATUS "TBBBind build targets are disabled due to unsupported environment")
     else()
         add_subdirectory(src/tbbbind)
@@ -302,7 +299,7 @@ else()
                 COMPONENT devel)
         file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
                    "include(\${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}Targets.cmake)\n")
-        if (NOT BUILD_SHARED_LIBS)
+        if (NOT TBB_BUILD_SHARED_LIBS)
             file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
                        "include(CMakeFindDependencyMacro)\nfind_dependency(Threads)\n")
         endif()

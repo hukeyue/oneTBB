@@ -12,13 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if (NOT BUILD_SHARED_LIBS)
+if (NOT TBB_BUILD_SHARED_LIBS)
     return()
 endif()
 
-add_library(tbbmalloc_proxy
+if (TBB_BUILD_SHARED_LIBS)
+add_library(tbbmalloc_proxy SHARED
     function_replacement.cpp
     proxy.cpp)
+else()
+add_library(tbbmalloc_proxy STATIC
+    function_replacement.cpp
+    proxy.cpp)
+endif()
 
 if (WIN32)
     target_sources(tbbmalloc_proxy PRIVATE tbbmalloc_proxy.rc)

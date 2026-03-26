@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_library(irml 
+if (TBB_BUILD_SHARED_LIBS)
+add_library(irml SHARED
     ../../src/tbb/allocator.cpp
     ../../src/tbb/dynamic_link.cpp
     ../../src/tbb/misc.cpp
@@ -21,6 +22,17 @@ add_library(irml
     ipc_server.cpp
     ipc_utils.cpp
 )
+else()
+add_library(irml STATIC
+    ../../src/tbb/allocator.cpp
+    ../../src/tbb/dynamic_link.cpp
+    ../../src/tbb/misc.cpp
+    ../../src/tbb/misc_ex.cpp
+    ../../src/tbb/exception.cpp
+    ipc_server.cpp
+    ipc_utils.cpp
+)
+endif()
 add_library(TBB::irml ALIAS irml)
 
 set_target_properties(irml PROPERTIES VERSION 1)
