@@ -83,6 +83,7 @@ enable_language(C)
 set_target_properties(tbbmalloc PROPERTIES
     DEFINE_SYMBOL ""
     LINKER_LANGUAGE C
+    CXX_SCAN_FOR_MODULES OFF
 )
 
 tbb_handle_ipo(tbbmalloc)
