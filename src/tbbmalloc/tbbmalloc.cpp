@@ -32,21 +32,29 @@
 namespace rml {
 namespace internal {
 
-#if TBB_USE_DEBUG
-#define DEBUG_SUFFIX "_debug"
-#else
 #define DEBUG_SUFFIX
-#endif /* TBB_USE_DEBUG */
+
+#ifdef __MINGW32__
+#define YASS_POSTFIX "_yass"
+#else
+#define YASS_POSTFIX
+#endif
+
+#if _WIN64
+#define BIT_SUFFIX "64"
+#elif _WIN32
+#define BIT_SUFFIX "32"
+#endif
 
 // MALLOCLIB_NAME is the name of the oneTBB memory allocator library.
 #if _WIN32||_WIN64
-#define MALLOCLIB_NAME "tbbmalloc" DEBUG_SUFFIX ".dll"
+#define MALLOCLIB_NAME "tbbmalloc" BIT_SUFFIX DEBUG_SUFFIX YASS_POSTFIX ".dll"
 #elif __APPLE__
-#define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".2.dylib"
+#define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".dylib"
 #elif __FreeBSD__ || __NetBSD__ || __OpenBSD__ || __sun || _AIX || __ANDROID__
 #define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".so"
 #elif __unix__
-#define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX  __TBB_STRING(.so.2)
+#define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".so"
 #else
 #error Unknown OS
 #endif
