@@ -174,7 +174,6 @@ endif()
 
 # -------------------------------------------------------------------
 # Files and folders naming
-set(CMAKE_DEBUG_POSTFIX _debug)
 
 if (NOT DEFINED TBB_OUTPUT_DIR_BASE)
     if (MSVC)
