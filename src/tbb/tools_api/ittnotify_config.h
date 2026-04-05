@@ -258,7 +258,11 @@
 #include <windows.h>
 typedef HMODULE           lib_t;
 typedef DWORD             TIDT;
+#if _WIN32_WINNT >= 0x0600
+typedef SRWLOCK           mutex_t;
+#else
 typedef CRITICAL_SECTION  mutex_t;
+#endif
 #ifdef __cplusplus
 #define MUTEX_INITIALIZER {}
 #else
@@ -288,10 +292,17 @@ typedef pthread_mutex_t   mutex_t;
 
 #if ITT_PLATFORM==ITT_PLATFORM_WIN
 #define __itt_get_proc(lib, name) GetProcAddress(lib, name)
+#if _WIN32_WINNT >= 0x0600
+#define __itt_mutex_init(mutex)   InitializeSRWLock(mutex)
+#define __itt_mutex_lock(mutex)   AcquireSRWLockExclusive(mutex)
+#define __itt_mutex_unlock(mutex) ReleaseSRWLockExclusive(mutex)
+#define __itt_mutex_destroy(mutex)
+#else
 #define __itt_mutex_init(mutex)   InitializeCriticalSection(mutex)
 #define __itt_mutex_lock(mutex)   EnterCriticalSection(mutex)
 #define __itt_mutex_unlock(mutex) LeaveCriticalSection(mutex)
 #define __itt_mutex_destroy(mutex) DeleteCriticalSection(mutex)
+#endif
 #define __itt_load_lib(name)      LoadLibraryA(name)
 #define __itt_unload_lib(handle)  FreeLibrary(handle)
 #define __itt_system_error()      (int)GetLastError()
