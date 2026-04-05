@@ -35,7 +35,7 @@
     #include <unistd.h> // sysconf(_SC_PAGESIZE)
 #elif USE_WINTHREAD
     #define GetMyTID() GetCurrentThreadId()
-#if __TBB_WIN8UI_SUPPORT
+#if __TBB_WIN8UI_SUPPORT || (_WIN32_WINNT >= 0x0600)
     #include<thread>
     #define TlsSetValue_func FlsSetValue
     #define TlsGetValue_func FlsGetValue
