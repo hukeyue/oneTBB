@@ -342,6 +342,7 @@ TBBMALLOCPROXY_EXPORT void operator delete[](void* ptr, const std::nothrow_t&) n
 
 #ifdef _WIN32
 #include <windows.h>
+#include <tchar.h>
 
 #if !__TBB_WIN8UI_SUPPORT
 
@@ -469,20 +470,20 @@ const char* known_bytecodes[] = {
     };
 
 #define __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_ENTRY(CRT_VER,function_name,dbgsuffix) \
-    ReplaceFunctionWithStore( #CRT_VER #dbgsuffix ".dll", #function_name, \
+    ReplaceFunctionWithStore(TEXT(#CRT_VER #dbgsuffix ".dll"), #function_name, \
       (FUNCPTR)__TBB_malloc_safer_##function_name##_##CRT_VER##dbgsuffix, \
       known_bytecodes, (FUNCPTR*)&orig_##function_name##_##CRT_VER##dbgsuffix );
 
 #define __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_ENTRY_NO_FALLBACK(CRT_VER,function_name,dbgsuffix) \
-    ReplaceFunctionWithStore( #CRT_VER #dbgsuffix ".dll", #function_name, \
+    ReplaceFunctionWithStore(TEXT(#CRT_VER #dbgsuffix ".dll"), #function_name, \
       (FUNCPTR)__TBB_malloc_safer_##function_name##_##CRT_VER##dbgsuffix, 0, nullptr );
 
 #define __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_ENTRY_REDIRECT(CRT_VER,function_name,dest_func,dbgsuffix) \
-    ReplaceFunctionWithStore( #CRT_VER #dbgsuffix ".dll", #function_name, \
+    ReplaceFunctionWithStore(TEXT(#CRT_VER #dbgsuffix ".dll"), #function_name, \
       (FUNCPTR)__TBB_malloc_safer_##dest_func##_##CRT_VER##dbgsuffix, 0, nullptr );
 
 #define __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_IMPL(CRT_VER,dbgsuffix)                             \
-    if (BytecodesAreKnown(#CRT_VER #dbgsuffix ".dll")) {                                          \
+    if (BytecodesAreKnown(TEXT(#CRT_VER #dbgsuffix ".dll"))) {                                    \
       __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_ENTRY(CRT_VER,free,dbgsuffix)                         \
       __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_ENTRY(CRT_VER,_msize,dbgsuffix)                       \
       __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_ENTRY_NO_FALLBACK(CRT_VER,realloc,dbgsuffix)          \
@@ -490,7 +491,7 @@ const char* known_bytecodes[] = {
       __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_ENTRY(CRT_VER,_aligned_msize,dbgsuffix)               \
       __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_ENTRY_NO_FALLBACK(CRT_VER,_aligned_realloc,dbgsuffix) \
     } else                                                                                        \
-        SkipReplacement(#CRT_VER #dbgsuffix ".dll");
+        SkipReplacement(TEXT(#CRT_VER #dbgsuffix ".dll"));
 
 #define __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_RELEASE(CRT_VER) __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_IMPL(CRT_VER,)
 #define __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_DEBUG(CRT_VER) __TBB_ORIG_ALLOCATOR_REPLACEMENT_CALL_IMPL(CRT_VER,d)
@@ -555,19 +556,27 @@ void operator_delete_arr_t(void* ptr, const std::nothrow_t&) noexcept {
     __TBB_malloc_safer_delete(ptr);
 }
 
+#ifndef UNICODE
+typedef char unicode_char_t;
+#define WCHAR_SPEC "%s"
+#else
+typedef wchar_t unicode_char_t;
+#define WCHAR_SPEC "%ls"
+#endif
+
 struct Module {
-    const char *name;
+    const unicode_char_t *name;
     bool        doFuncReplacement; // do replacement in the DLL
 };
 
 Module modules_to_replace[] = {
-    {"msvcr100d.dll", true},
-    {"msvcr100.dll", true},
-    {"msvcr110d.dll", true},
-    {"msvcr110.dll", true},
-    {"msvcr120d.dll", true},
-    {"msvcr120.dll", true},
-    {"ucrtbase.dll", true},
+    {TEXT("msvcr100d.dll"), true},
+    {TEXT("msvcr100.dll"), true},
+    {TEXT("msvcr110d.dll"), true},
+    {TEXT("msvcr110.dll"), true},
+    {TEXT("msvcr120d.dll"), true},
+    {TEXT("msvcr120.dll"), true},
+    {TEXT("ucrtbase.dll"), true},
 //    "ucrtbased.dll" is not supported because of problems with _dbg functions
 #if __TBB_OVERLOAD_OLD_MSVCR
     {"msvcr90d.dll", true},
@@ -642,33 +651,9 @@ FRDATA cxx_routines_to_replace[] = {
     { "??_U@YAPAXIABUnothrow_t@std@@@Z", (FUNCPTR)operator_new_arr_t, FRR_IGNORE }
 };
 
-#ifndef UNICODE
-typedef char unicode_char_t;
-#define WCHAR_SPEC "%s"
-#else
-typedef wchar_t unicode_char_t;
-#define WCHAR_SPEC "%ls"
-#endif
-
 // Check that we recognize bytecodes that should be replaced by trampolines.
 // If some functions have unknown prologue patterns, replacement should not be done.
 bool BytecodesAreKnown(const unicode_char_t *dllName)
-{
-    const char *funcName[] = {"free", "_msize", "_aligned_free", "_aligned_msize", 0};
-    HMODULE module = GetModuleHandle(dllName);
-
-    if (!module)
-        return false;
-    for (int i=0; funcName[i]; i++)
-        if (! IsPrologueKnown(dllName, funcName[i], known_bytecodes, module)) {
-            fprintf(stderr, "TBBmalloc: skip allocation functions replacement in " WCHAR_SPEC
-                    ": unknown prologue for function " WCHAR_SPEC "\n", dllName, funcName[i]);
-            return false;
-        }
-    return true;
-}
-
-void SkipReplacement(const unicode_char_t *dllName)
 {
 #ifndef UNICODE
     const char *dllStr = dllName;
@@ -681,10 +666,26 @@ void SkipReplacement(const unicode_char_t *dllName)
 
     errno_t ret = wcstombs_s(&real_sz, dllStr, sz, dllName, sz-1);
     __TBB_ASSERT(!ret, "Dll name conversion failed");
+    static_cast<void>(ret);
 #endif
+    const char *funcName[] = {"free", "_msize", "_aligned_free", "_aligned_msize", 0};
+    HMODULE module = GetModuleHandle(dllName);
 
+    if (!module)
+        return false;
+    for (int i=0; funcName[i]; i++)
+        if (! IsPrologueKnown(dllStr, funcName[i], known_bytecodes, module)) {
+            fprintf(stderr, "TBBmalloc: skip allocation functions replacement in %s"
+                    ": unknown prologue for function %s\n", dllStr, funcName[i]);
+            return false;
+        }
+    return true;
+}
+
+void SkipReplacement(const unicode_char_t *dllName)
+{
     for (size_t i=0; i<arrayLength(modules_to_replace); i++)
-        if (!strcmp(modules_to_replace[i].name, dllStr)) {
+        if (!_tcscmp(modules_to_replace[i].name, dllName)) {
             modules_to_replace[i].doFuncReplacement = false;
             break;
         }
@@ -697,7 +698,7 @@ void ReplaceFunctionWithStore( const unicode_char_t *dllName, const char *funcNa
     if (res == FRR_OK || res == FRR_NODLL || (res == FRR_NOFUNC && on_error == FRR_IGNORE))
         return;
 
-    fprintf(stderr, "Failed to %s function %s in module %s\n",
+    fprintf(stderr, "Failed to %s function %s in module " WCHAR_SPEC" \n",
             res==FRR_NOFUNC? "find" : "replace", funcName, dllName);
 
     // Unable to replace a required function
@@ -728,18 +729,18 @@ void doMallocReplacement()
         {
             ReplaceFunctionWithStore( modules_to_replace[j].name, c_routines_to_replace[i]._func, c_routines_to_replace[i]._fptr, nullptr, nullptr,  c_routines_to_replace[i]._on_error );
         }
-        if ( strcmp(modules_to_replace[j].name, "ucrtbase.dll") == 0 ) {
-            HMODULE ucrtbase_handle = GetModuleHandle("ucrtbase.dll");
+        if (_tcscmp(modules_to_replace[j].name, L"ucrtbase.dll") == 0 ) {
+            HMODULE ucrtbase_handle = GetModuleHandle(TEXT("ucrtbase.dll"));
             if (!ucrtbase_handle)
                 continue;
             // If _o_free function is present and patchable, redirect it to tbbmalloc as well
             // This prevents issues with other _o_* functions which might allocate memory with malloc
             if ( IsPrologueKnown("ucrtbase.dll", "_o_free", known_bytecodes, ucrtbase_handle)) {
-                ReplaceFunctionWithStore( "ucrtbase.dll", "_o_free", (FUNCPTR)__TBB_malloc__o_free, known_bytecodes, (FUNCPTR*)&orig__o_free,  FRR_FAIL );
+                ReplaceFunctionWithStore(TEXT("ucrtbase.dll"), "_o_free", (FUNCPTR)__TBB_malloc__o_free, known_bytecodes, (FUNCPTR*)&orig__o_free,  FRR_FAIL );
             }
             // Similarly for _free_base
             if (IsPrologueKnown("ucrtbase.dll", "_free_base", known_bytecodes, ucrtbase_handle)) {
-                ReplaceFunctionWithStore("ucrtbase.dll", "_free_base", (FUNCPTR)__TBB_malloc__free_base, known_bytecodes, (FUNCPTR*)&orig__free_base, FRR_FAIL);
+                ReplaceFunctionWithStore(TEXT("ucrtbase.dll"), "_free_base", (FUNCPTR)__TBB_malloc__free_base, known_bytecodes, (FUNCPTR*)&orig__free_base, FRR_FAIL);
             }
             // ucrtbase.dll does not export operator new/delete, so skip the rest of the loop.
             continue;
@@ -750,10 +751,10 @@ void doMallocReplacement()
 #if !_WIN64
             // in Microsoft* Visual Studio* 2012 and 2013 32-bit operator delete consists of 2 bytes only: short jump to free(ptr);
             // replacement should be skipped for this particular case.
-            if ( ((strcmp(modules_to_replace[j].name, "msvcr110.dll") == 0) || (strcmp(modules_to_replace[j].name, "msvcr120.dll") == 0)) && (strcmp(cxx_routines_to_replace[i]._func, "??3@YAXPAX@Z") == 0) ) continue;
+            if ( ((_tcscmp(modules_to_replace[j].name, TEXT("msvcr110.dll")) == 0) || (_tcscmp(modules_to_replace[j].name, TEXT("msvcr120.dll")) == 0)) && (strcmp(cxx_routines_to_replace[i]._func, "??3@YAXPAX@Z") == 0) ) continue;
             // in Microsoft* Visual Studio* 2013 32-bit operator delete[] consists of 2 bytes only: short jump to free(ptr);
             // replacement should be skipped for this particular case.
-            if ( (strcmp(modules_to_replace[j].name, "msvcr120.dll") == 0) && (strcmp(cxx_routines_to_replace[i]._func, "??_V@YAXPAX@Z") == 0) ) continue;
+            if ( (_tcscmp(modules_to_replace[j].name, TEXT("msvcr120.dll")) == 0) && (strcmp(cxx_routines_to_replace[i]._func, "??_V@YAXPAX@Z") == 0) ) continue;
 #endif
             ReplaceFunctionWithStore( modules_to_replace[j].name, cxx_routines_to_replace[i]._func, cxx_routines_to_replace[i]._fptr, nullptr, nullptr,  cxx_routines_to_replace[i]._on_error );
         }
