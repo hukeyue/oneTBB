@@ -39,7 +39,7 @@
 #if _WIN32 || _WIN64
 // declare prototypes of just the needed TLS functions, instead of
 // including whole windows.h
-#if __TBB_WIN8UI_SUPPORT
+#if __TBB_WIN8UI_SUPPORT || (_WIN32_WINNT >= 0x0600)
 extern "C" __declspec(dllimport) unsigned long __stdcall FlsAlloc(void(__stdcall*)(void*));
 extern "C" __declspec(dllimport) int __stdcall FlsFree(unsigned long dwFlsIndex);
 extern "C" __declspec(dllimport) int __stdcall FlsSetValue(unsigned long dwFlsIndex, void* lpFlsValue);
@@ -294,7 +294,7 @@ template <>
 class ets_base<ets_key_per_instance>: public ets_base<ets_no_key> {
     using super = ets_base<ets_no_key>;
 #if _WIN32||_WIN64
-#if __TBB_WIN8UI_SUPPORT
+#if __TBB_WIN8UI_SUPPORT || (_WIN32_WINNT >= 0x0600)
     using tls_key_t = unsigned long;
     void create_key() { my_key = FlsAlloc(nullptr); }
     void destroy_key() { FlsFree(my_key); }
