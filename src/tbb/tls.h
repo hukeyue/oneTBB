@@ -46,7 +46,7 @@ public:
 #else /* __TBB_USE_WINAPI */
     typedef DWORD tls_key_t;
 public:
-#if !__TBB_WIN8UI_SUPPORT
+#if !__TBB_WIN8UI_SUPPORT && (_WIN32_WINNT < 0x0600)
     int create() {
         tls_key_t tmp = TlsAlloc();
         if( tmp==TLS_OUT_OF_INDEXES )
