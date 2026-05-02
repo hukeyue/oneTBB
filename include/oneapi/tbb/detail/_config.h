@@ -200,6 +200,9 @@
 
 /** __TBB_WIN8UI_SUPPORT enables support of Windows* Store Apps and limit a possibility to load
     shared libraries at run time only from application container **/
+#ifndef WINAPI_FAMILY_APP
+#define WINAPI_FAMILY_APP 2
+#endif
 #if defined(WINAPI_FAMILY) && WINAPI_FAMILY == WINAPI_FAMILY_APP
     #define __TBB_WIN8UI_SUPPORT 1
 #else
@@ -259,7 +262,7 @@
 #endif
 
 // GCC4.8 on RHEL7 does not support std::get_new_handler
-#define __TBB_CPP11_GET_NEW_HANDLER_PRESENT             (_MSC_VER >= 1900 || __TBB_GLIBCXX_VERSION >= 40900 && __GXX_EXPERIMENTAL_CXX0X__ || _LIBCPP_VERSION)
+#define __TBB_CPP11_GET_NEW_HANDLER_PRESENT             (_MSC_VER >= 1900 && !_LIBCPP_VERSION || __TBB_GLIBCXX_VERSION >= 40900 && __GXX_EXPERIMENTAL_CXX0X__ && !_LIBCPP_VERSION || _LIBCPP_VERSION && !_MSC_VER)
 // GCC4.8 on RHEL7 does not support std::is_trivially_copyable
 #define __TBB_CPP11_TYPE_PROPERTIES_PRESENT             (_LIBCPP_VERSION || _MSC_VER >= 1700 || (__TBB_GLIBCXX_VERSION >= 50000 && __GXX_EXPERIMENTAL_CXX0X__))
 

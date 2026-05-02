@@ -45,6 +45,8 @@
 #include "oneapi/tbb/scalable_allocator.h"
 #include "../tbb/environment.h"
 
+#undef UNICODE
+
 #if !defined(__EXCEPTIONS) && !defined(_CPPUNWIND) && !defined(__SUNPRO_CC)
     #if TBB_USE_EXCEPTIONS
         #error Compilation settings do not support exception handling. Please do not set TBB_USE_EXCEPTIONS macro or set it to 0.
