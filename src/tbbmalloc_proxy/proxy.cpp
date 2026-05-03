@@ -635,6 +635,7 @@ FRDATA c_routines_to_replace[] = {
     { "_expand",  (FUNCPTR)safer_expand, FRR_IGNORE },
 };
 
+#ifndef __MINGW32__
 FRDATA cxx_routines_to_replace[] = {
 #if _WIN64
     { "??2@YAPEAX_K@Z", (FUNCPTR)operator_new, FRR_FAIL },
@@ -650,6 +651,7 @@ FRDATA cxx_routines_to_replace[] = {
     { "??2@YAPAXIABUnothrow_t@std@@@Z", (FUNCPTR)operator_new_t, FRR_IGNORE },
     { "??_U@YAPAXIABUnothrow_t@std@@@Z", (FUNCPTR)operator_new_arr_t, FRR_IGNORE }
 };
+#endif // __MINGW23__
 
 #ifndef UNICODE
 typedef char unicode_char_t;
@@ -754,6 +756,7 @@ void doMallocReplacement()
             continue;
         }
 
+#ifndef __MINGW32__
         for (size_t i = 0; i < arrayLength(cxx_routines_to_replace); i++)
         {
 #if !_WIN64
@@ -766,6 +769,7 @@ void doMallocReplacement()
 #endif
             ReplaceFunctionWithStore( modules_to_replace[j].name, cxx_routines_to_replace[i]._func, cxx_routines_to_replace[i]._fptr, nullptr, nullptr,  cxx_routines_to_replace[i]._on_error );
         }
+#endif
     }
 }
 
