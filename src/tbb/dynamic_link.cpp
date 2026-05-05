@@ -15,6 +15,8 @@
     limitations under the License.
 */
 
+#undef UNICODE
+
 #include "dynamic_link.h"
 #include "environment.h"
 
@@ -558,6 +560,9 @@ namespace r1 {
 
 #if _WIN32
     DWORD loading_flags(int) {
+#ifndef LOAD_LIBRARY_SAFE_CURRENT_DIRS
+#define LOAD_LIBRARY_SAFE_CURRENT_DIRS 0x00002000
+#endif
         // Do not search in working directory if it is considered unsafe
         return LOAD_LIBRARY_SAFE_CURRENT_DIRS;
     }
