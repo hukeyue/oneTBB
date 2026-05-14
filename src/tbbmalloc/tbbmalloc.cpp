@@ -34,7 +34,7 @@ namespace internal {
 
 #define DEBUG_SUFFIX
 
-#ifdef __MINGW32__
+#if !defined(__APPLE__) && !defined(_MSC_VER)
 #define YASS_POSTFIX "_yass"
 #else
 #define YASS_POSTFIX
@@ -50,11 +50,11 @@ namespace internal {
 #if _WIN32||_WIN64
 #define MALLOCLIB_NAME "tbbmalloc" BIT_SUFFIX DEBUG_SUFFIX YASS_POSTFIX ".dll"
 #elif __APPLE__
-#define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".dylib"
+#define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX YASS_POSTFIX ".dylib"
 #elif __FreeBSD__ || __NetBSD__ || __OpenBSD__ || __sun || _AIX || __ANDROID__
-#define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".so"
+#define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX YASS_POSTFIX ".so"
 #elif __unix__
-#define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".so"
+#define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX YASS_POSTFIX ".so"
 #else
 #error Unknown OS
 #endif
